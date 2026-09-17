@@ -256,7 +256,7 @@ function taskClasses() {
     // 6.2 Класс Car (наследуется от Vehicle)
     // Добавьте новое свойство numDoors (количество дверей).
     class Car extends Vehicle {
-        constructor(make, model, year, numDoors) {
+        constructor(make, model, year, numDoors = 4) {
             super(make, model, year);
             this.numDoors = numDoors;
         }
@@ -298,8 +298,8 @@ function taskClasses() {
     // ===== ЗАДАНИЕ 7: Каррирование =====
     // Создайте функцию createVehicleFactory, которая возвращает функцию
     // для создания транспортных средств определенного типа (каррирование).
-    const createVehicleFactory = (vehicleType) => (make, model, year) => {
-        return new vehicleType(make, model, year);
+    const createVehicleFactory = (vehicleType) => (...args) => {
+        return new vehicleType(...args);
     };
 
     return { Vehicle, Car, ElectricCar, createVehicleFactory };
@@ -358,7 +358,7 @@ function validatePassword(password) {
  * - +7(999)123-45-67
  */
 function validatePhone(phone) {
-    const phoneRegex = /^(\+7|8)[\s-]?\(?\d{3}\)?[\s-]?\d{3}[\s-]?\d{2}[\s-]?\d{2}$/;
+    const phoneRegex = /^(\+7|8)[\s-]?(?:\(\d{3}\)|\d{3})[\s-]?\d{3}[\s-]?\d{2}[\s-]?\d{2}$/;
     return phoneRegex.test(phone);
 }
 
@@ -393,7 +393,62 @@ function runTests() {
     console.assert(calculate(10, 5, '+') === 15, "Тест калькулятора провален");
 
     // Тест 3: taskManager
-    console.assert((taskManager.getStats() || {}).total === 3, "Тест taskManager провален");
+    console.log("\n--- Тестирование taskManager ---");
+
+    // 1. Тест addTask (добавление с приоритетом по умолчанию)
+    taskManager.addTask("Купить молоко");
+    console.assert(taskManager.tasks.length === 4, "addTask: не увеличилась длина массива");
+    const newTask = taskManager.tasks.find(t => t.title === "Купить молоко");
+    console.assert(newTask !== undefined, "addTask: задача не найдена в массиве");
+    console.assert(newTask.id === 4, "addTask: неверно сгенерирован ID (ожидался 4)");
+    console.assert(newTask.priority === "medium", "addTask: неверный приоритет по умолчанию");
+    console.assert(newTask.completed === false, "addTask: новая задача должна быть не выполнена");
+
+    // 2. Тест addTask (добавление с явным приоритетом)
+    taskManager.addTask("Срочная задача", "high");
+    const urgentTask = taskManager.tasks.find(t => t.title === "Срочная задача");
+    console.assert(urgentTask.priority === "high", "addTask: неверно установлен явный приоритет");
+    console.assert(taskManager.tasks.length === 5, "addTask: длина массива должна быть 5");
+
+    // 3. Тест completeTask (успешное выполнение)
+    // Изначально задача с id: 1 была completed: false
+    taskManager.completeTask(1);
+    const task1 = taskManager.tasks.find(t => t.id === 1);
+    console.assert(task1.completed === true, "completeTask: не изменил статус на true");
+
+    // 4. Тест completeTask (несуществующий ID - не должно ломать код)
+    taskManager.completeTask(999);
+    console.assert(taskManager.tasks.length === 5, "completeTask: вызов с несуществующим ID изменил длину массива");
+
+    // 5. Тест deleteTask
+    // Удаляем задачу с id: 3 ("Прочитать книгу")
+    taskManager.deleteTask(3);
+    console.assert(taskManager.tasks.length === 4, "deleteTask: длина массива не уменьшилась");
+    console.assert(!taskManager.tasks.some(t => t.id === 3), "deleteTask: задача с id 3 все еще существует в массиве");
+    
+    // Проверка, что удалилась именно та задача, а другие остались
+    console.assert(taskManager.tasks.some(t => t.id === 1), "deleteTask: ошибочно удалил другую задачу (id 1)");
+    console.assert(taskManager.tasks.some(t => t.id === 2), "deleteTask: ошибочно удалил другую задачу (id 2)");
+
+    // 6. Тест getTasksByStatus
+    // После изменений: выполнены (true) -> id 1, id 2. Не выполнены (false) -> id 4, id 5
+    const completedTasks = taskManager.getTasksByStatus(true);
+    console.assert(completedTasks.length === 2, "getTasksByStatus(true): неверное количество выполненных задач");
+    console.assert(completedTasks.every(t => t.completed === true), "getTasksByStatus(true): в массиве есть невыполненные задачи");
+
+    const pendingTasks = taskManager.getTasksByStatus(false);
+    console.assert(pendingTasks.length === 2, "getTasksByStatus(false): неверное количество невыполненных задач");
+    console.assert(pendingTasks.every(t => t.completed === false), "getTasksByStatus(false): в массиве есть выполненные задачи");
+
+    // 7. Тест getStats (проверка актуальной статистики после всех изменений)
+    // Всего: 4, Выполнено: 2, В ожидании: 2, Процент: 50%
+    const stats = taskManager.getStats();
+    console.assert(stats.total === 4, "getStats: неверный total");
+    console.assert(stats.completed === 2, "getStats: неверный completed");
+    console.assert(stats.pending === 2, "getStats: неверный pending");
+    console.assert(stats.completionRate === 50, "getStats: неверный completionRate");
+
+    console.log("✅ Тесты taskManager успешно пройдены!");
 
     // Тест 4: классы и наследование
     const { Vehicle, Car, ElectricCar, createVehicleFactory } = taskClasses();
@@ -413,9 +468,17 @@ function runTests() {
     console.assert(testVehicle.age === (new Date().getFullYear() - 2010), 'Тест возраста провален');
 
     const createCarFactory = createVehicleFactory(Car);
-    const myNewCar = createCarFactory('BMW', 'X5', 2022);
-    console.log('Создан новый автомобиль:');
+    const myNewCar = createCarFactory('BMW', 'X5', 2022, 5); 
+    console.log('Создан новый автомобиль через фабрику:');
     myNewCar.displayInfo();
+    console.assert(myNewCar.numDoors === 5, "Тест фабрики для Car (numDoors) провален");
+
+    const createElectricCarFactory = createVehicleFactory(ElectricCar);
+    const myNewElectricCar = createElectricCarFactory('Tesla', 'Model S', 2023, 4, 100);
+    console.log('Создан новый электромобиль через фабрику:');
+    myNewElectricCar.displayInfo();
+    console.assert(myNewElectricCar.batteryCapacity === 100, "Тест фабрики для ElectricCar провален");
+
 
     console.log('Всего создано транспортных средств:', Vehicle.getTotalVehicles());
 

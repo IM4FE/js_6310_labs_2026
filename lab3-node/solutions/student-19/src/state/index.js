@@ -1,7 +1,5 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 
-// === Состояния (константы) ===
-// Object.freeze делает объект неизменяемым — защита от случайных опечаток
 export const STATES = Object.freeze({
   IDLE: 'IDLE',                                 // «свободен», ждёт команду
   WAITING_FOR_PROVIDER: 'WAITING_FOR_PROVIDER', // ждёт выбор провайдера (номер)
@@ -9,7 +7,6 @@ export const STATES = Object.freeze({
   WAITING_FOR_MESSAGE: 'WAITING_FOR_MESSAGE'    // ждёт текст сообщения для LLM
 });
 
-// === Базовый FSM (в памяти) ===
 export class FSM {
   constructor() {
     // Map: ключ = ID пользователя, значение = { state, data }
@@ -40,12 +37,10 @@ export class FSM {
   }
 }
 
-// === PersistentFSM — FSM с сохранением в файл ===
-// Наследуется от FSM, добавляет сохранение на диск
 export class PersistentFSM extends FSM {
   // filePath — путь к файлу, куда будем писать состояния
   constructor(filePath) {
-    super(); // вызываем конструктор родителя
+    super();
     this.filePath = filePath;
     this._load(); // при запуске читаем ранее сохранённые состояния
   }
@@ -62,7 +57,6 @@ export class PersistentFSM extends FSM {
         }
       }
     } catch {
-      // Если файла нет или он битый — просто начинаем с пустого состояния
       this.states = new Map();
     }
   }

@@ -95,17 +95,13 @@ curl -X POST http://localhost:3000/api/chat \
 
 ## Примеры работы
 
-### Пример 1: выбор провайдера в Telegram
+### Пример 1: На основе мок данных
 
-![Пример выбора провайдера](docs/screenshots/providers.png)
+![Пример на основе мок данных](docs/screenshots/mock_example.png)
 
-### Пример 2: отправка сообщения в LLM
+### Пример 2: На основе OpenAI
 
-![Пример чата](docs/screenshots/chat.png)
-
-### Пример 3: ответ REST API
-
-![Пример API](docs/screenshots/api.png)
+![Пример на основе OpenAI](docs/screenshots/openai_example.png)
 
 > Скриншоты делаются после запуска приложения и помещаются в `docs/screenshots/`.
 

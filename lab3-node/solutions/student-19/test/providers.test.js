@@ -50,8 +50,7 @@ describe('ProviderRegistry', () => {
 
   test('chat throws for unknown model', async () => {
     registry.register(mockProvider);
-    await expect(registry.chat('mock', 'no-such-model', 'hi'))
-        .rejects.toThrow(/not found/);
+    await expect(registry.chat('mock', 'no-such-model', 'hi')).rejects.toThrow(/not found/);
   });
 });
 
@@ -72,5 +71,24 @@ describe('MockProvider', () => {
   test('chat rejects empty message', async () => {
     const p = new MockProvider();
     await expect(p.chat('mock-small', '')).rejects.toThrow();
+  });
+  test('chat changes status to unavailable on error and recovers on success', async () => {
+    const p = new MockProvider();
+
+    // 1. Изначально статус available
+    expect(p.getStatus()).toBe('available');
+
+    // 2. Намеренно вызываем ошибку (пустое сообщение)
+    await expect(p.chat('mock-small', '')).rejects.toThrow('Message must be a non-empty string');
+
+    // 3. Проверяем, что статус изменился на unavailable (покрывает catch и setStatus)
+    expect(p.getStatus()).toBe('unavailable');
+
+    // 4. Делаем успешный запрос
+    const reply = await p.chat('mock-small', 'hello');
+    expect(reply).toBe('[mock/mock-small] Echo: hello');
+
+    // 5. Проверяем, что статус восстановился (покрывает успешный путь и setStatus)
+    expect(p.getStatus()).toBe('available');
   });
 });

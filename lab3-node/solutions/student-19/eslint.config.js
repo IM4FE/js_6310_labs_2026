@@ -3,7 +3,7 @@ import globals from "globals";
 import { defineConfig } from "eslint/config";
 
 export default defineConfig([
-  {
+  { 
     files: ["**/*.{js,mjs,cjs}"],
     plugins: { js },
     extends: ["js/recommended"],
@@ -11,15 +11,17 @@ export default defineConfig([
   },
   {
     rules: {
-      "no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+      "no-unused-vars": "error", // Строго как в примере, без argsIgnorePattern
       "no-undef": "error",
       "no-var": "error",
       "indent": [
         "error",
         2,
         {
-          FunctionDeclaration: { parameters: "first" },
-          MemberExpression: 2
+          "FunctionDeclaration": {
+            "parameters": "first"
+          },
+          "MemberExpression": 2
         }
       ]
     }

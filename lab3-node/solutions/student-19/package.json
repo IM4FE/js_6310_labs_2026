@@ -7,10 +7,10 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
-    "lint": "eslint src test",
-    "lint:fix": "eslint src test --fix",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage"
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --passWithNoTests",
+    "test:coverage": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --coverage --passWithNoTests"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
@@ -20,10 +20,11 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
-    "@jest/globals": "^30.5.2",
+    "@jest/globals": "^30.2.0",
+    "cross-env": "^7.0.3",
     "eslint": "^9.0.0",
     "globals": "^15.0.0",
-    "jest": "^30.5.2",
+    "jest": "^30.2.0",
     "supertest": "^7.0.0"
   }
 }

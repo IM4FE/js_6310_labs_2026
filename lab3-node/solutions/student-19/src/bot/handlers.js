@@ -22,14 +22,15 @@ export function createHandlers(fsm, providers) {
   async function listProviders(ctx) {
     const userId = String(ctx.from.id);
     const list = providers.list();
-    const lines = list.map((p, i) => `${i + 1}. ${p.name} [${p.getStatus()}]`);
-    const text = lines.length
-      ? lines.join('\n')
-      : 'No providers configured.';
     
-    const providerNames = list.map((p) => p.name);
+    const lines = list.map((p, i) => {
+      const modelsStr = p.getModels().join(', ');
+      return `${i + 1}. ${p.name} [${p.getStatus()}] (models: ${modelsStr})`;
+    });
     
-    fsm.setState(userId, STATES.WAITING_FOR_PROVIDER, { providerNames });
+    const text = lines.length ? lines.join('\n') : 'No providers configured.';
+    
+    fsm.setState(userId, STATES.WAITING_FOR_PROVIDER, {});
     await ctx.reply(`Available providers:\n${text}\n\nSend the number to select:`);
   }
 
@@ -66,15 +67,12 @@ export function createHandlers(fsm, providers) {
     
     const provider = list[idx];
     const models = providers.getModels(provider.name);
-    
-    // FIX: Сохраняем только имя провайдера (строку)
     const nextData = { ...data, activeProvider: provider.name };
 
     if (models.length === 1) {
       fsm.setState(userId, STATES.IDLE, { ...nextData, activeModel: models[0] });
       await ctx.reply(`Selected: ${provider.name} / ${models[0]}`);
     } else {
-      // FIX: Сохраняем только массив имен моделей (строк), а не объекты
       fsm.setState(userId, STATES.WAITING_FOR_MODEL, { ...nextData, modelNames: models });
       const modelLines = models.map((m, i) => `${i + 1}. ${m}`).join('\n');
       await ctx.reply(`Select model for ${provider.name}:\n${modelLines}`);
